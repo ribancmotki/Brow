@@ -30,6 +30,7 @@ const FILE_TREE = [
     type: 'folder' as const,
     path: '/src',
     children: [
+      { name: 'main.zig', type: 'file' as const, path: '/src/main.zig', size: '3.1 KB' },
       {
         name: 'browser',
         type: 'folder' as const,
@@ -37,7 +38,7 @@ const FILE_TREE = [
         children: [
           { name: 'profiles.zig', type: 'file' as const, path: '/src/browser/profiles.zig', size: '2.9 KB' },
           { name: 'lifecycle.zig', type: 'file' as const, path: '/src/browser/lifecycle.zig', size: '1.4 KB' },
-          { name: 'context.zig', type: 'file' as const, path: '/src/browser/context.zig', size: '4.1 KB' },
+          { name: 'context.zig', type: 'file' as const, path: '/src/browser/context.zig', size: '1.2 KB' },
         ]
       },
       {
@@ -45,17 +46,50 @@ const FILE_TREE = [
         type: 'folder' as const,
         path: '/src/dom',
         children: [
-          { name: 'tree.zig', type: 'file' as const, path: '/src/dom/tree.zig', size: '8.4 KB' },
-          { name: 'selector.zig', type: 'file' as const, path: '/src/dom/selector.zig', size: '4.2 KB' },
+          { name: 'tree.zig', type: 'file' as const, path: '/src/dom/tree.zig', size: '1.8 KB' },
+          { name: 'selector.zig', type: 'file' as const, path: '/src/dom/selector.zig', size: '1.1 KB' },
         ]
       },
       {
-        name: 'js',
+        name: 'v8',
         type: 'folder' as const,
-        path: '/src/js',
+        path: '/src/v8',
         children: [
-          { name: 'bootstrap.js', type: 'file' as const, path: '/src/js/bootstrap.js', size: '8.9 KB' },
-          { name: 'runtime.zig', type: 'file' as const, path: '/src/js/runtime.zig', size: '2.8 KB' },
+          { name: 'bootstrap.zig', type: 'file' as const, path: '/src/v8/bootstrap.zig', size: '2.1 KB' },
+          { name: 'hooks.zig', type: 'file' as const, path: '/src/v8/hooks.zig', size: '1.5 KB' },
+          { name: 'runtime.zig', type: 'file' as const, path: '/src/v8/runtime.zig', size: '1.2 KB' },
+        ]
+      },
+      {
+        name: 'network',
+        type: 'folder' as const,
+        path: '/src/network',
+        children: [
+          { name: 'waterfall.zig', type: 'file' as const, path: '/src/network/waterfall.zig', size: '2.3 KB' },
+        ]
+      },
+      {
+        name: 'cdp',
+        type: 'folder' as const,
+        path: '/src/cdp',
+        children: [
+          { name: 'protocol.zig', type: 'file' as const, path: '/src/cdp/protocol.zig', size: '1.6 KB' },
+        ]
+      },
+      {
+        name: 'mcp',
+        type: 'folder' as const,
+        path: '/src/mcp',
+        children: [
+          { name: 'tools.zig', type: 'file' as const, path: '/src/mcp/tools.zig', size: '1.7 KB' },
+        ]
+      },
+      {
+        name: 'simd',
+        type: 'folder' as const,
+        path: '/src/simd',
+        children: [
+          { name: 'vector_engine.zig', type: 'file' as const, path: '/src/simd/vector_engine.zig', size: '1.3 KB' },
         ]
       }
     ]

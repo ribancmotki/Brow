@@ -18,13 +18,47 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "dukicz",
-        .root_source_file = b.path("src/cli/main.zig"),
+        .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
     exe.linkLibC();
     b.installArtifact(exe);
+}`,
+  '/src/main.zig': `const std = @import("std");
+const profiles = @import("browser/profiles.zig");
+const context = @import("browser/context.zig");
+const lifecycle = @import("browser/lifecycle.zig");
+const v8_bootstrap = @import("v8/bootstrap.zig");
+const v8_runtime = @import("v8/runtime.zig");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const stdout = std.io.getStdOut().writer();
+    try stdout.print("[DUKICZ] High-Performance Native Zig iOS Browser Engine Core Initializing...\n", .{});
+
+    var sess = lifecycle.SessionLifecycle.init();
+    try stdout.print("[DUKICZ] Session Created. Active: {s}\n", .{if (sess.is_active) "true" else "false"});
+
+    var browser_ctx = try context.BrowserContext.create(allocator);
+    defer browser_ctx.destroy();
+
+    try stdout.print("[DUKICZ] UserAgent Profile Loaded: {s}\n", .{browser_ctx.profile.user_agent});
+    try stdout.print("[DUKICZ] GPU Hardware Acceleration: {s}\n", .{browser_ctx.profile.gl_renderer});
+
+    var runtime = v8_runtime.V8Runtime.init(allocator);
+    defer runtime.deinit();
+
+    const script_hook = try v8_bootstrap.generateBootstrapScript(allocator, browser_ctx.profile);
+    defer allocator.free(script_hook);
+
+    _ = runtime.executeScript(script_hook);
+
+    try stdout.print("[DUKICZ] Engine startup complete. Waiting for CDP/MCP RPC commands...\n", .{});
 }`,
   '/src/browser/profiles.zig': `const std = @import("std");
 
@@ -160,42 +194,63 @@ pub fn findNodesByTag(root: *tree.Node, tag_name: []const u8, results: *std.Arra
         try findNodesByTag(child, tag_name, results);
     }
 }`,
-  '/src/js/bootstrap.js': `// Native V8 Engine Isolation Bootstrap
-(function() {
-  'use strict';
-  
-  // Randomize Canvas Context 2D baseline
-  const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-  HTMLCanvasElement.prototype.toDataURL = function(type) {
-    return originalToDataURL.apply(this, arguments);
-  };
-  
-  // Randomize AudioContext Oscillator Frequency Jitter
-  if (typeof window !== 'undefined' && window.AudioContext) {
-    const originalCreateOscillator = window.AudioContext.prototype.createOscillator;
-    window.AudioContext.prototype.createOscillator = function() {
-      const osc = originalCreateOscillator.apply(this, arguments);
-      const originalStart = osc.start;
-      osc.start = function() {
-        if (osc.frequency) {
-          osc.frequency.value += (Math.random() - 0.5) * 0.000001;
-        }
-        return originalStart.apply(this, arguments);
-      };
-      return osc;
-    };
-  }
+  '/src/v8/bootstrap.zig': `const std = @import("std");
+const profiles = @import("../browser/profiles.zig");
 
-  console.log('[dukicz-v8] Native iOS engine bootstrap initialized.');
-})();`,
-  '/src/js/runtime.zig': `const std = @import("std");
+pub fn generateBootstrapScript(allocator: std.mem.Allocator, config: profiles.FingerprintConfig) ![]u8 {
+    return try std.fmt.allocPrint(
+        allocator,
+        \\\\(function() {{
+        \\\\  'use strict';
+        \\\\  Object.defineProperty(navigator, 'userAgent', {{ get: () => "{s}" }});
+        \\\\  Object.defineProperty(navigator, 'platform', {{ get: () => "iPhone" }});
+        \\\\  Object.defineProperty(navigator, 'maxTouchPoints', {{ get: () => {d} }});
+        \\\\  Object.defineProperty(navigator, 'hardwareConcurrency', {{ get: () => {d} }});
+        \\\\  Object.defineProperty(navigator, 'deviceMemory', {{ get: () => {d} }});
+        \\\\  window.__DUKICZ_CANVAS_SEED__ = {d};
+        \\\\  window.__DUKICZ_AUDIO_RATE__ = {d};
+        \\\\}})();
+    ,
+        .{
+            config.user_agent,
+            config.max_touch_points,
+            config.hardware_concurrency,
+            config.device_memory_gb,
+            config.canvas_noise_seed,
+            config.audio_sample_rate,
+        },
+    );
+}`,
+  '/src/v8/hooks.zig': `const std = @import("std");
+
+pub const CanvasHook = struct {
+    seed: u32,
+
+    pub fn injectNoise(self: CanvasHook, pixel_data: []u8) void {
+        var prng = std.rand.DefaultPrng.init(self.seed);
+        const random = prng.random();
+
+        var i: usize = 0;
+        while (i < pixel_data.len) : (i += 4) {
+            if (pixel_data[i] > 0) {
+                const noise = random.intRangeAtMost(i8, -1, 1);
+                const current: i16 = pixel_data[i];
+                const new_val = std.math.clamp(current + noise, 0, 255);
+                pixel_data[i] = @intCast(new_val);
+            }
+        }
+    }
+};`,
+  '/src/v8/runtime.zig': `const std = @import("std");
 
 pub const V8Runtime = struct {
+    allocator: std.mem.Allocator,
     isolate_ptr: usize,
     memory_limit_bytes: usize,
 
-    pub fn init() V8Runtime {
+    pub fn init(allocator: std.mem.Allocator) V8Runtime {
         return V8Runtime{
+            .allocator = allocator,
             .isolate_ptr = 0x7fff10002000,
             .memory_limit_bytes = 1024 * 1024 * 1024,
         };
@@ -205,6 +260,77 @@ pub const V8Runtime = struct {
         _ = self;
         _ = script;
         return true;
+    }
+
+    pub fn deinit(self: *V8Runtime) void {
+        _ = self;
+    }
+};`,
+  '/src/network/waterfall.zig': `const std = @import("std");
+
+pub const HTTPHeader = struct {
+    name: []const u8,
+    value: []const u8,
+};
+
+pub const InterceptedRequest = struct {
+    id: []const u8,
+    url: []const u8,
+    method: []const u8,
+    status_code: u16,
+    content_type: []const u8,
+    duration_ms: u32,
+    headers: std.ArrayList(HTTPHeader),
+
+    pub fn init(allocator: std.mem.Allocator, id: []const u8, url: []const u8, method: []const u8) InterceptedRequest {
+        return InterceptedRequest{
+            .id = id,
+            .url = url,
+            .method = method,
+            .status_code = 200,
+            .content_type = "text/html; charset=utf-8",
+            .duration_ms = 120,
+            .headers = std.ArrayList(HTTPHeader).init(allocator),
+        };
+    }
+
+    pub fn addHeader(self: *InterceptedRequest, name: []const u8, value: []const u8) !void {
+        try self.headers.append(HTTPHeader{ .name = name, .value = value });
+    }
+
+    pub fn deinit(self: *InterceptedRequest) void {
+        self.headers.deinit();
+    }
+};`,
+  '/src/cdp/protocol.zig': `const std = @import("std");
+
+pub const CDPCommand = struct {
+    id: u32,
+    method: []const u8,
+    params_json: []const u8,
+
+    pub fn formatResponse(allocator: std.mem.Allocator, id: u32, result_json: []const u8) ![]u8 {
+        return try std.fmt.allocPrint(
+            allocator,
+            \\\\{{"id":{d},"result":{s}}}
+        ,
+            .{ id, result_json },
+        );
+    }
+};`,
+  '/src/mcp/tools.zig': `const std = @import("std");
+
+pub const MCPToolExecution = struct {
+    tool_name: []const u8,
+    arguments_json: []const u8,
+
+    pub fn executeNavigate(allocator: std.mem.Allocator, url: []const u8) ![]u8 {
+        return try std.fmt.allocPrint(
+            allocator,
+            \\\\{{"content":[{"type":"text","text":"Navigated successfully to {s} under iOS Safari engine."}]}}
+        ,
+            .{url},
+        );
     }
 };`,
   '/src/simd/vector_engine.zig': `const std = @import("std");
@@ -226,7 +352,11 @@ export const ZigSourceViewer: React.FC<ZigSourceViewerProps> = ({ fileTree, test
     '/src': true,
     '/src/browser': true,
     '/src/dom': true,
-    '/src/js': true,
+    '/src/v8': true,
+    '/src/network': true,
+    '/src/cdp': true,
+    '/src/mcp': true,
+    '/src/simd': true,
   });
   const [copied, setCopied] = useState(false);
 
