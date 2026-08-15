@@ -1,13 +1,1063 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Dukicz Engine - High-Performance Native Browser Engine</title>
+  <style>
+    :root {
+      --ios-bg: #000000;
+      --ios-card-bg: #1c1c1e;
+      --ios-card-secondary: #2c2c2e;
+      --ios-accent: #0A84FF;
+      --ios-accent-rgb: 10, 132, 255;
+      --ios-success: #30D158;
+      --ios-warning: #FF9F0A;
+      --ios-danger: #FF453A;
+      --ios-purple: #BF5AF2;
+      --ios-text-primary: #ffffff;
+      --ios-text-secondary: #8e8e93;
+      --ios-text-tertiary: #636366;
+      --ios-border: rgba(255, 255, 255, 0.12);
+      --ios-border-subtle: rgba(255, 255, 255, 0.06);
+      --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      --ios-font-mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--ios-bg);
+      color: var(--ios-text-primary);
+      font-family: var(--ios-font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .ios-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background-color: rgba(22, 22, 24, 0.85);
+      -webkit-backdrop-filter: blur(25px);
+      backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--ios-border);
+    }
+
+    .ios-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ios-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ios-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--ios-success);
+      box-shadow: 0 0 8px var(--ios-success);
+    }
+
+    .ios-title {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+      color: var(--ios-text-primary);
+    }
+
+    .ios-badge {
+      font-family: var(--ios-font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background-color: rgba(10, 132, 255, 0.15);
+      color: var(--ios-accent);
+      border: 1px solid rgba(10, 132, 255, 0.3);
+    }
+
+    .ios-segmented-control {
+      display: flex;
+      flex-wrap: wrap;
+      background-color: #121214;
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--ios-border);
+      gap: 2px;
+    }
+
+    .segmented-btn {
+      background: transparent;
+      color: var(--ios-text-secondary);
+      border: none;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .segmented-btn:hover {
+      color: var(--ios-text-primary);
+    }
+
+    .segmented-btn.active {
+      background-color: var(--ios-card-secondary);
+      color: var(--ios-text-primary);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .ios-main-content {
+      flex: 1;
+      padding: 24px;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ios-card {
+      background-color: var(--ios-card-bg);
+      border: 1px solid var(--ios-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .ios-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .ios-card-header h3 {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+    }
+
+    .ios-card-subtitle {
+      font-size: 13px;
+      color: var(--ios-text-secondary);
+      margin-top: 2px;
+    }
+
+    .ios-address-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background-color: #000000;
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--ios-border);
+      margin-bottom: 16px;
+    }
+
+    .ios-lock-icon {
+      width: 14px;
+      height: 14px;
+      background-color: var(--ios-success);
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .ios-address-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--ios-text-primary);
+      font-family: var(--ios-font-mono);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .ios-button {
+      background-color: var(--ios-accent);
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .ios-button:hover {
+      filter: brightness(1.1);
+    }
+
+    .ios-button:active {
+      transform: scale(0.98);
+      opacity: 0.8;
+    }
+
+    .ios-button-secondary {
+      background-color: var(--ios-card-secondary);
+      color: var(--ios-text-primary);
+      border: 1px solid var(--ios-border);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .ios-button-secondary:hover {
+      background-color: #3a3a3c;
+    }
+
+    .ios-button-secondary:active {
+      transform: scale(0.98);
+    }
+
+    .ios-button-danger {
+      background-color: rgba(255, 69, 58, 0.15);
+      color: var(--ios-danger);
+      border: 1px solid rgba(255, 69, 58, 0.3);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .ios-viewport-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #0b0b0d;
+      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid var(--ios-border-subtle);
+    }
+
+    .ios-device-frame {
+      border: 8px solid #2c2c2e;
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+      background-color: #ffffff;
+      width: 393px;
+      max-width: 100%;
+      height: 640px;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease;
+    }
+
+    .ios-device-notch {
+      height: 24px;
+      background-color: #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ios-notch-pill {
+      width: 80px;
+      height: 12px;
+      background-color: #1a1a1a;
+      border-radius: 6px;
+    }
+
+    .ios-device-frame iframe {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #ffffff;
+    }
+
+    .ios-controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+
+    .ios-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .ios-meta-item {
+      background-color: var(--ios-card-secondary);
+      border: 1px solid var(--ios-border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .ios-meta-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ios-text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .ios-meta-value {
+      font-family: var(--ios-font-mono);
+      font-size: 13px;
+      color: var(--ios-text-primary);
+      word-break: break-all;
+    }
+
+    .ios-code-block {
+      background-color: #000000;
+      border: 1px solid var(--ios-border);
+      border-radius: 12px;
+      padding: 16px;
+      color: #30D158;
+      font-family: var(--ios-font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .ios-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .ios-form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ios-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ios-select, .ios-textarea, .ios-input {
+      background-color: #000000;
+      color: var(--ios-text-primary);
+      border: 1px solid var(--ios-border);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-family: var(--ios-font-mono);
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+    }
+
+    .ios-select:focus, .ios-textarea:focus, .ios-input:focus {
+      border-color: var(--ios-accent);
+      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.25);
+    }
+
+    .ios-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .ios-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .ios-table th {
+      background-color: #121214;
+      color: var(--ios-text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--ios-border);
+    }
+
+    .ios-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--ios-border-subtle);
+      font-family: var(--ios-font-mono);
+      font-size: 12px;
+    }
+
+    .ios-table tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--ios-font-mono);
+    }
+
+    .status-200 { background: rgba(48, 209, 88, 0.15); color: var(--ios-success); border: 1px solid rgba(48, 209, 88, 0.3); }
+    .status-300 { background: rgba(255, 159, 10, 0.15); color: var(--ios-warning); border: 1px solid rgba(255, 159, 10, 0.3); }
+    .status-400, .status-500 { background: rgba(255, 69, 58, 0.15); color: var(--ios-danger); border: 1px solid rgba(255, 69, 58, 0.3); }
+
+    .tree-node {
+      margin-left: 18px;
+      border-left: 1px dashed var(--ios-border);
+      padding-left: 12px;
+      margin-top: 4px;
+      font-family: var(--ios-font-mono);
+      font-size: 12px;
+    }
+
+    .tree-tag {
+      color: var(--ios-accent);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tree-tag:hover {
+      text-decoration: underline;
+    }
+
+    .tree-attr {
+      color: var(--ios-warning);
+    }
+
+    .tree-val {
+      color: #79c0ff;
+    }
+
+    .tree-text {
+      color: var(--ios-text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="ios-navbar">
+      <div class="ios-brand">
+        <div class="ios-status-indicator">
+          <span class="ios-status-dot"></span>
+        </div>
+        <span class="ios-title">Dukicz Native Engine</span>
+        <span class="ios-badge">aarch64-ios JSC / Zig Core</span>
+      </div>
+      <nav class="ios-segmented-control">
+        <button class="segmented-btn active" data-tab="device">iOS Viewport</button>
+        <button class="segmented-btn" data-tab="fingerprint">Fingerprint</button>
+        <button class="segmented-btn" data-tab="cdp">CDP Console</button>
+        <button class="segmented-btn" data-tab="dom">DOM Tree</button>
+        <button class="segmented-btn" data-tab="js">JS Sandbox</button>
+        <button class="segmented-btn" data-tab="network">Waterfall</button>
+        <button class="segmented-btn" data-tab="mcp">MCP Protocols</button>
+      </nav>
+    </header>
+
+    <main class="ios-main-content">
+      <section id="tab-device" class="tab-pane active">
+        <div class="ios-card">
+          <div class="ios-address-bar">
+            <span class="ios-lock-icon"></span>
+            <input type="url" id="target-url" value="https://example.com" placeholder="Enter target URL...">
+            <button id="btn-navigate" class="ios-button">Navigate</button>
+          </div>
+
+          <div class="ios-controls-bar">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="font-size: 12px; color: var(--ios-text-secondary);">Device Preset:</span>
+              <button class="ios-button-secondary" id="btn-preset-iphone">iPhone 16 Pro (393px)</button>
+              <button class="ios-button-secondary" id="btn-preset-ipad">iPad Pro (1024px)</button>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="ios-button-secondary" id="btn-refresh-viewport">Reload Engine View</button>
+            </div>
+          </div>
+
+          <div class="ios-viewport-container">
+            <div class="ios-device-frame" id="device-frame">
+              <div class="ios-device-notch">
+                <div class="ios-notch-pill"></div>
+              </div>
+              <iframe id="browser-viewport" src="/api/render-viewport"></iframe>
+            </div>
+          </div>
+
+          <div class="ios-meta-grid">
+            <div class="ios-meta-item">
+              <div class="ios-meta-label">Active Document Title</div>
+              <div class="ios-meta-value" id="meta-doc-title">Example Domain</div>
+            </div>
+            <div class="ios-meta-item">
+              <div class="ios-meta-label">Final Resolved URL</div>
+              <div class="ios-meta-value" id="meta-doc-url">https://example.com</div>
+            </div>
+            <div class="ios-meta-item">
+              <div class="ios-meta-label">HTTP Status / Engine Protocol</div>
+              <div class="ios-meta-value" id="meta-doc-status">200 OK (TLS 1.3 / HTTP 1.1)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-fingerprint" class="tab-pane">
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Active Session & Hardware Fingerprint</h3>
+              <div class="ios-card-subtitle">Apple Silicon / iOS WebKit Profile Parameters</div>
+            </div>
+            <button id="btn-randomize" class="ios-button-secondary">Randomize Canvas Seed</button>
+          </div>
+
+          <div class="ios-form-group">
+            <label for="select-profile">Switch Hardware Profile</label>
+            <select id="select-profile" class="ios-select"></select>
+          </div>
+
+          <pre id="fingerprint-json" class="ios-code-block">Loading session state...</pre>
+        </div>
+      </section>
+
+      <section id="tab-cdp" class="tab-pane">
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Chrome DevTools Protocol (CDP) JSON-RPC 2.0</h3>
+              <div class="ios-card-subtitle">Low-Latency Headless Protocol Dispatcher</div>
+            </div>
+          </div>
+
+          <div class="ios-form-group">
+            <label for="cdp-method">Select Protocol Command Domain</label>
+            <select id="cdp-method" class="ios-select">
+              <option value="Browser.getVersion">Browser.getVersion</option>
+              <option value="Page.navigate">Page.navigate</option>
+              <option value="DOM.getDocument">DOM.getDocument</option>
+              <option value="DOM.querySelector">DOM.querySelector</option>
+              <option value="Runtime.evaluate">Runtime.evaluate</option>
+              <option value="Emulation.setDeviceMetricsOverride">Emulation.setDeviceMetricsOverride</option>
+              <option value="Network.getCookies">Network.getCookies</option>
+              <option value="Accessibility.getFullAXTree">Accessibility.getFullAXTree</option>
+            </select>
+          </div>
+
+          <div class="ios-form-group">
+            <label for="cdp-params-json">Command Parameters (JSON)</label>
+            <textarea id="cdp-params-json" class="ios-textarea">{}</textarea>
+          </div>
+
+          <button id="btn-send-cdp" class="ios-button">Dispatch Command</button>
+
+          <pre id="cdp-output" class="ios-code-block">// CDP JSON-RPC 2.0 Response will render here</pre>
+        </div>
+      </section>
+
+      <section id="tab-dom" class="tab-pane">
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Structure of Arrays (SoA) DOM Engine Inspector</h3>
+              <div class="ios-card-subtitle">Real-Time Parse Tree and Node Traversal</div>
+            </div>
+            <button id="btn-refresh-dom" class="ios-button-secondary">Refresh Tree</button>
+          </div>
+
+          <div class="ios-address-bar">
+            <input type="text" id="dom-selector-input" value="h1" placeholder="Enter CSS Selector (e.g. h1, a, #main, .card)...">
+            <button id="btn-run-query" class="ios-button">Query</button>
+          </div>
+
+          <div id="dom-query-results" class="ios-meta-item" style="margin-bottom: 16px; display: none;"></div>
+
+          <div class="ios-form-group">
+            <label>Parsed Document Node Hierarchy</label>
+            <div id="dom-tree-view" class="ios-code-block" style="color: #ffffff; max-height: 400px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-js" class="tab-pane">
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Isolated JavaScriptCore / V8 Execution Sandbox</h3>
+              <div class="ios-card-subtitle">Evaluate JavaScript against active Document Context</div>
+            </div>
+          </div>
+
+          <div class="ios-form-group">
+            <label for="js-eval-input">JavaScript Source Code</label>
+            <textarea id="js-eval-input" class="ios-textarea">navigator.userAgent + "\nPlatform: " + navigator.platform + "\nHardware Concurrency: " + navigator.hardwareConcurrency</textarea>
+          </div>
+
+          <button id="btn-run-js" class="ios-button">Execute Script</button>
+
+          <div class="ios-form-group" style="margin-top: 16px;">
+            <label>Evaluation Output / Result</label>
+            <pre id="js-eval-output" class="ios-code-block">// Script results will appear here</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-network" class="tab-pane">
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Network Waterfall & Interception Monitor</h3>
+              <div class="ios-card-subtitle">Chronological Resource Timeline & Header Inspector</div>
+            </div>
+            <button id="btn-refresh-waterfall" class="ios-button-secondary">Refresh Waterfall</button>
+          </div>
+
+          <table class="ios-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Status</th>
+                <th>URL</th>
+                <th>Content-Type</th>
+                <th>Duration</th>
+                <th>Size</th>
+              </tr>
+            </thead>
+            <tbody id="waterfall-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--ios-text-secondary);">No network requests recorded yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Active Cookie Jar</h3>
+              <div class="ios-card-subtitle">Session & Persistent HTTP Cookies</div>
+            </div>
+            <button id="btn-clear-cookies" class="ios-button-danger">Clear All Cookies</button>
+          </div>
+          <pre id="cookies-json" class="ios-code-block">Loading cookies...</pre>
+        </div>
+      </section>
+
+      <section id="tab-mcp" class="tab-pane">
+        <div class="ios-card">
+          <div class="ios-card-header">
+            <div>
+              <h3>Model Context Protocol (MCP) Tool Bridge</h3>
+              <div class="ios-card-subtitle">Autonomous Browser Tooling Router</div>
+            </div>
+          </div>
+
+          <div class="ios-form-group">
+            <label for="mcp-tool-select">Select MCP Tool</label>
+            <select id="mcp-tool-select" class="ios-select">
+              <option value="navigate">navigate (url)</option>
+              <option value="snapshot">snapshot ()</option>
+              <option value="evaluate">evaluate (expression)</option>
+              <option value="get_cookies">get_cookies ()</option>
+              <option value="query_selector">query_selector (selector)</option>
+            </select>
+          </div>
+
+          <div class="ios-form-group">
+            <label for="mcp-args-input">Tool Arguments (JSON)</label>
+            <textarea id="mcp-args-input" class="ios-textarea">{"url": "https://example.com"}</textarea>
+          </div>
+
+          <button id="btn-call-mcp" class="ios-button">Call Tool via MCP Router</button>
+
+          <pre id="mcp-output" class="ios-code-block">// MCP tool execution output will display here</pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const tabButtons = document.querySelectorAll('.segmented-btn');
+      const tabPanes = document.querySelectorAll('.tab-pane');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const targetTab = button.getAttribute('data-tab');
+
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabPanes.forEach(pane => pane.classList.remove('active'));
+
+          button.classList.add('active');
+          document.getElementById(`tab-${targetTab}`).classList.add('active');
+
+          if (targetTab === 'dom') loadDomTree();
+          if (targetTab === 'network') { loadWaterfall(); loadCookies(); }
+        });
+      });
+
+      async function loadSession() {
+        try {
+          const res = await fetch('/api/session');
+          const data = await res.json();
+          document.getElementById('fingerprint-json').textContent = JSON.stringify(data, null, 2);
+          document.getElementById('meta-doc-title').textContent = data.title || 'Untitled';
+          document.getElementById('meta-doc-url').textContent = data.currentUrl;
+          document.getElementById('target-url').value = data.currentUrl;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      async function loadProfiles() {
+        try {
+          const res = await fetch('/api/profiles');
+          const data = await res.json();
+          const select = document.getElementById('select-profile');
+          select.innerHTML = '';
+          data.profiles.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.name;
+            if (p.id === data.activeProfileId) opt.selected = true;
+            select.appendChild(opt);
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      document.getElementById('select-profile')?.addEventListener('change', async (e) => {
+        const profileId = e.target.value;
+        await fetch('/api/session/select-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileId })
+        });
+        loadSession();
+      });
+
+      document.getElementById('btn-randomize')?.addEventListener('click', async () => {
+        await fetch('/api/session/randomize', { method: 'POST' });
+        loadSession();
+      });
+
+      async function handleNavigation() {
+        const urlInput = document.getElementById('target-url');
+        const iframe = document.getElementById('browser-viewport');
+        const url = urlInput.value.trim();
+        if (!url) return;
+
+        document.getElementById('meta-doc-status').textContent = 'Fetching and Parsing Document...';
+
+        try {
+          const res = await fetch('/api/navigate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            document.getElementById('meta-doc-title').textContent = data.title;
+            document.getElementById('meta-doc-url').textContent = data.url;
+            document.getElementById('meta-doc-status').textContent = `${data.status} OK (${data.durationMs}ms, ${data.nodeCount} DOM Nodes)`;
+            iframe.src = '/api/render-viewport?' + Date.now();
+          } else {
+            document.getElementById('meta-doc-status').textContent = 'Navigation Error: ' + (data.error || 'Failed');
+          }
+        } catch (e) {
+          document.getElementById('meta-doc-status').textContent = 'Network Error: ' + e.message;
+        }
+      }
+
+      document.getElementById('btn-navigate')?.addEventListener('click', handleNavigation);
+      document.getElementById('target-url')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleNavigation();
+      });
+
+      document.getElementById('btn-refresh-viewport')?.addEventListener('click', () => {
+        const iframe = document.getElementById('browser-viewport');
+        iframe.src = '/api/render-viewport?' + Date.now();
+      });
+
+      document.getElementById('btn-preset-iphone')?.addEventListener('click', () => {
+        document.getElementById('device-frame').style.width = '393px';
+      });
+
+      document.getElementById('btn-preset-ipad')?.addEventListener('click', () => {
+        document.getElementById('device-frame').style.width = '768px';
+      });
+
+      const cdpMethodSelect = document.getElementById('cdp-method');
+      const cdpParamsInput = document.getElementById('cdp-params-json');
+
+      cdpMethodSelect?.addEventListener('change', () => {
+        const m = cdpMethodSelect.value;
+        if (m === 'Page.navigate') cdpParamsInput.value = '{\n  "url": "https://example.com"\n}';
+        else if (m === 'DOM.querySelector') cdpParamsInput.value = '{\n  "selector": "h1"\n}';
+        else if (m === 'Runtime.evaluate') cdpParamsInput.value = '{\n  "expression": "document.title"\n}';
+        else if (m === 'Emulation.setDeviceMetricsOverride') cdpParamsInput.value = '{\n  "width": 393,\n  "height": 852,\n  "deviceScaleFactor": 3.0\n}';
+        else cdpParamsInput.value = '{}';
+      });
+
+      document.getElementById('btn-send-cdp')?.addEventListener('click', async () => {
+        const outputBlock = document.getElementById('cdp-output');
+        outputBlock.textContent = '// Dispatching JSON-RPC request to native backend...';
+
+        let params = {};
+        try {
+          params = JSON.parse(cdpParamsInput.value || '{}');
+        } catch (err) {
+          outputBlock.textContent = '// JSON Parse Error: ' + err.message;
+          return;
+        }
+
+        const payload = {
+          jsonrpc: '2.0',
+          id: Date.now(),
+          method: cdpMethodSelect.value,
+          params
+        };
+
+        try {
+          const response = await fetch('/cdp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await response.json();
+          outputBlock.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          outputBlock.textContent = JSON.stringify({ error: error.message }, null, 2);
+        }
+      });
+
+      function renderNode(node) {
+        const div = document.createElement('div');
+        div.className = 'tree-node';
+
+        if (node.nodeType === 3) {
+          div.innerHTML = `<span class="tree-text">"${node.nodeValue}"</span>`;
+          return div;
+        }
+
+        let attrStr = '';
+        if (node.attributes) {
+          for (const [k, v] of Object.entries(node.attributes)) {
+            attrStr += ` <span class="tree-attr">${k}</span>=<span class="tree-val">"${v}"</span>`;
+          }
+        }
+
+        div.innerHTML = `&lt;<span class="tree-tag">${node.tagName}</span>${attrStr}&gt;`;
+
+        if (node.children && node.children.length > 0) {
+          node.children.forEach(child => {
+            div.appendChild(renderNode(child));
+          });
+          const closeTag = document.createElement('div');
+          closeTag.style.marginTop = '2px';
+          closeTag.innerHTML = `&lt;/<span class="tree-tag">${node.tagName}</span>&gt;`;
+          div.appendChild(closeTag);
+        }
+
+        return div;
+      }
+
+      async function loadDomTree() {
+        const container = document.getElementById('dom-tree-view');
+        container.textContent = 'Parsing DOM tree hierarchy...';
+        try {
+          const res = await fetch('/api/dom/tree');
+          const data = await res.json();
+          container.innerHTML = '';
+          container.appendChild(renderNode(data.root));
+        } catch (e) {
+          container.textContent = 'Failed to load tree: ' + e.message;
+        }
+      }
+
+      document.getElementById('btn-refresh-dom')?.addEventListener('click', loadDomTree);
+
+      document.getElementById('btn-run-query')?.addEventListener('click', async () => {
+        const selector = document.getElementById('dom-selector-input').value.trim();
+        const resultsBox = document.getElementById('dom-query-results');
+        resultsBox.style.display = 'block';
+        resultsBox.textContent = 'Querying selector...';
+
+        try {
+          const res = await fetch('/api/dom/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selector })
+          });
+          const data = await res.json();
+          resultsBox.innerHTML = `
+            <div class="ios-meta-label">Matched ${data.count} Elements for "${data.selector}"</div>
+            <pre class="ios-code-block" style="margin-top: 8px;">${JSON.stringify(data.matches, null, 2)}</pre>
+          `;
+        } catch (e) {
+          resultsBox.textContent = 'Error: ' + e.message;
+        }
+      });
+
+      document.getElementById('btn-run-js')?.addEventListener('click', async () => {
+        const expression = document.getElementById('js-eval-input').value;
+        const output = document.getElementById('js-eval-output');
+        output.textContent = 'Running in Sandbox...';
+
+        try {
+          const res = await fetch('/api/evaluate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ expression })
+          });
+          const data = await res.json();
+          output.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          output.textContent = 'Evaluation error: ' + e.message;
+        }
+      });
+
+      async function loadWaterfall() {
+        try {
+          const res = await fetch('/api/waterfall');
+          const data = await res.json();
+          const tbody = document.getElementById('waterfall-tbody');
+          tbody.innerHTML = '';
+
+          if (data.waterfall.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--ios-text-secondary);">No network requests recorded</td></tr>';
+            return;
+          }
+
+          data.waterfall.forEach(item => {
+            const tr = document.createElement('tr');
+            const statusCls = item.status >= 400 ? 'status-400' : item.status >= 300 ? 'status-300' : 'status-200';
+            tr.innerHTML = `
+              <td><span style="font-weight: 700;">${item.method}</span></td>
+              <td><span class="status-badge ${statusCls}">${item.status}</span></td>
+              <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.url}</td>
+              <td>${item.contentType || 'text/html'}</td>
+              <td>${item.durationMs}ms</td>
+              <td>${(item.sizeBytes / 1024).toFixed(1)} KB</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      async function loadCookies() {
+        try {
+          const res = await fetch('/api/cookies');
+          const data = await res.json();
+          document.getElementById('cookies-json').textContent = JSON.stringify(data.cookies, null, 2);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      document.getElementById('btn-refresh-waterfall')?.addEventListener('click', () => {
+        loadWaterfall();
+        loadCookies();
+      });
+
+      document.getElementById('btn-clear-cookies')?.addEventListener('click', async () => {
+        await fetch('/api/cookies', { method: 'DELETE' });
+        loadCookies();
+      });
+
+      const mcpSelect = document.getElementById('mcp-tool-select');
+      const mcpArgsInput = document.getElementById('mcp-args-input');
+
+      mcpSelect?.addEventListener('change', () => {
+        const t = mcpSelect.value;
+        if (t === 'navigate') mcpArgsInput.value = '{"url": "https://example.com"}';
+        else if (t === 'evaluate') mcpArgsInput.value = '{"expression": "document.title"}';
+        else if (t === 'query_selector') mcpArgsInput.value = '{"selector": "h1"}';
+        else mcpArgsInput.value = '{}';
+      });
+
+      document.getElementById('btn-call-mcp')?.addEventListener('click', async () => {
+        const toolName = mcpSelect.value;
+        const output = document.getElementById('mcp-output');
+        output.textContent = 'Calling MCP tool...';
+
+        let args = {};
+        try {
+          args = JSON.parse(mcpArgsInput.value || '{}');
+        } catch (err) {
+          output.textContent = 'Invalid JSON arguments: ' + err.message;
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/mcp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: Date.now(),
+              method: 'tools/call',
+              params: {
+                name: toolName,
+                arguments: args
+              }
+            })
+          });
+          const data = await res.json();
+          output.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          output.textContent = 'MCP Error: ' + e.message;
+        }
+      });
+
+      loadProfiles();
+      loadSession();
+    })();
+  </script>
+</body>
+</html>
